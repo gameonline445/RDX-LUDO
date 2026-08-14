@@ -165,7 +165,12 @@ export default function AdminPanel() {
               <div key={d.id} className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
                 <div className="flex-1">
                   <div className="font-bold">{d.username} · ₹{d.amount}</div>
-                  <div className="text-xs text-slate-400">UPI: {d.upi_id} · {d.holder_name || "-"} · {new Date(d.created_at).toLocaleString()}</div>
+                  <div className="text-xs text-slate-400">
+                    {d.method === "bank"
+                      ? `Bank · ${d.holder_name || "-"} · A/C ${d.account_number} · IFSC ${d.ifsc}${d.bank_name ? " · " + d.bank_name : ""}`
+                      : `UPI · ${d.upi_id}${d.holder_name ? " · " + d.holder_name : ""}`}
+                  </div>
+                  <div className="text-[10px] text-slate-500">{new Date(d.created_at).toLocaleString()}</div>
                 </div>
                 <button onClick={() => wdAction(d.id, "approve")} className="bg-blue-600 px-3 py-1.5 rounded-lg text-sm font-bold">Approve</button>
                 <button onClick={() => wdAction(d.id, "mark_paid")} className="bg-emerald-600 px-3 py-1.5 rounded-lg text-sm font-bold">Mark Paid</button>

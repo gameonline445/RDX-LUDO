@@ -309,6 +309,126 @@ class TestWithdrawal:
         assert r_pd.status_code == 200
 
 
+# ---------- withdrawal method (UPI + Bank) tests ----------
+
+class TestWithdrawalMethods:
+    def _seed_winnings(self):
+        # generate winnings via leave-forfeit flow
+        u1 = login_user(); u2 = login_user()
+        b = requests.post(f"{API}/rooms/create", json={"entry_amount": 200}, headers=u1["h"]).json()
+        requests.post(f"{API}/rooms/join", json={"room_code": b["room_code"]}, headers=u2["h"])
+        requests.post(f"{API}/game/leave", json={"battle_id": b["id"]}, headers=u1["h"])
+        return u2
+
+    def test_upi_valid_creates_pending(self):
+        u = self._seed_winnings()
+        r = requests.post(f"{API}/withdrawals/create",
+                          json={"amount": 100, "method": "upi", "upi_id": "alice@upi"}, headers=u["h"])
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["status"] == "pending"
+        assert d["method"] == "upi"
+        assert d["upi_id"] == "alice@upi"
+        assert d["payout_target"] == "alice@upi"
+        # winnings locked
+        me = requests.get(f"{API}/auth/me", headers=u["h"]).json()
+        assert me["wallet"]["winnings_balance"] <= 280.0001
+
+    def test_upi_missing_returns_400(self):
+        u = self._seed_winnings()
+        r = requests.post(f"{API}/withdrawals/create",
+                          json={"amount": 100, "method": "upi"}, headers=u["h"])
+        assert r.status_code == 400
+        assert r.json().get("detail") == "invalid_upi_id"
+
+    def test_upi_invalid_format_returns_400(self):
+        u = self._seed_winnings()
+        r = requests.post(f"{API}/withdrawals/create",
+                          json={"amount": 100, "method": "upi", "upi_id": "notavalidupi"}, headers=u["h"])
+        assert r.status_code == 400
+        assert r.json().get("detail") == "invalid_upi_id"
+
+    def test_bank_valid_creates_pending_with_payout_target(self):
+        u = self._seed_winnings()
+        r = requests.post(f"{API}/withdrawals/create",
+                          json={"amount": 100, "method": "bank",
+                                "account_number": "123456789012",
+                                "ifsc": "hdfc0001234",
+                                "bank_name": "HDFC Bank",
+                                "holder_name": "Alice K"}, headers=u["h"])
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["status"] == "pending"
+        assert d["method"] == "bank"
+        assert d["account_number"] == "123456789012"
+        assert d["ifsc"] == "HDFC0001234"  # uppercased
+        assert d["bank_name"] == "HDFC Bank"
+        assert d["holder_name"] == "Alice K"
+        assert d["payout_target"] == "Alice K · A/C 123456789012 · IFSC HDFC0001234"
+
+    def test_bank_missing_fields_returns_400(self):
+        u = self._seed_winnings()
+        # missing ifsc
+        r = requests.post(f"{API}/withdrawals/create",
+                          json={"amount": 100, "method": "bank",
+                                "account_number": "123", "holder_name": "X"}, headers=u["h"])
+        assert r.status_code == 400
+        assert r.json().get("detail") == "bank_details_required"
+        # missing holder
+        r2 = requests.post(f"{API}/withdrawals/create",
+                           json={"amount": 100, "method": "bank",
+                                 "account_number": "123", "ifsc": "HDFC0001234"}, headers=u["h"])
+        assert r2.status_code == 400
+        assert r2.json().get("detail") == "bank_details_required"
+        # missing account_number
+        r3 = requests.post(f"{API}/withdrawals/create",
+                           json={"amount": 100, "method": "bank",
+                                 "ifsc": "HDFC0001234", "holder_name": "X"}, headers=u["h"])
+        assert r3.status_code == 400
+        assert r3.json().get("detail") == "bank_details_required"
+
+    def test_insufficient_winnings_any_method(self):
+        # fresh user - only signup bonus in bonus bucket, winnings=0
+        u = login_user()
+        r_u = requests.post(f"{API}/withdrawals/create",
+                            json={"amount": 100, "method": "upi", "upi_id": "x@y"}, headers=u["h"])
+        assert r_u.status_code == 400
+        assert r_u.json().get("detail") == "insufficient_winnings"
+        r_b = requests.post(f"{API}/withdrawals/create",
+                            json={"amount": 100, "method": "bank",
+                                  "account_number": "1", "ifsc": "H0001", "holder_name": "X"}, headers=u["h"])
+        assert r_b.status_code == 400
+        assert r_b.json().get("detail") == "insufficient_winnings"
+
+    def test_admin_listing_shows_both_methods_and_action(self):
+        u = self._seed_winnings()
+        rw1 = requests.post(f"{API}/withdrawals/create",
+                            json={"amount": 100, "method": "upi", "upi_id": "bob@upi"}, headers=u["h"]).json()
+        rw2 = requests.post(f"{API}/withdrawals/create",
+                            json={"amount": 100, "method": "bank",
+                                  "account_number": "9999888877",
+                                  "ifsc": "ICIC0004321",
+                                  "holder_name": "Bob R"}, headers=u["h"]).json()
+        h = admin_token()
+        lst = requests.get(f"{API}/admin/withdrawals?status_filter=pending", headers=h).json()
+        ids = {w["id"]: w for w in lst}
+        assert rw1["id"] in ids and rw2["id"] in ids
+        wu = ids[rw1["id"]]; wb = ids[rw2["id"]]
+        assert wu["method"] == "upi" and wu["upi_id"] == "bob@upi"
+        assert wb["method"] == "bank"
+        assert wb["account_number"] == "9999888877"
+        assert wb["ifsc"] == "ICIC0004321"
+        assert wb["holder_name"] == "Bob R"
+        assert "Bob R" in wb["payout_target"] and "ICIC0004321" in wb["payout_target"]
+        # admin approve + mark_paid on bank withdrawal
+        ra = requests.post(f"{API}/admin/withdrawals/action",
+                           json={"withdrawal_id": rw2["id"], "action": "approve"}, headers=h)
+        assert ra.status_code == 200
+        rp = requests.post(f"{API}/admin/withdrawals/action",
+                           json={"withdrawal_id": rw2["id"], "action": "mark_paid"}, headers=h)
+        assert rp.status_code == 200
+
+
 # ---------- notifications & referral ----------
 
 class TestNotificationsAndReferral:

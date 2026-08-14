@@ -390,8 +390,12 @@ async def deposit_qr(amount: Optional[float] = None):
 
 class WithdrawBody(BaseModel):
     amount: float
-    upi_id: str
+    method: str = "upi"  # upi | bank
+    upi_id: Optional[str] = None
     holder_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc: Optional[str] = None
+    bank_name: Optional[str] = None
 
 
 @api.post("/withdrawals/create")
@@ -402,21 +406,37 @@ async def create_withdraw(body: WithdrawBody, user: dict = Depends(get_current_u
     w = await ensure_wallet(user["id"])
     if w["winnings_balance"] < body.amount:
         raise HTTPException(400, "insufficient_winnings")
+    method = (body.method or "upi").lower()
+    if method == "upi":
+        if not body.upi_id or "@" not in body.upi_id:
+            raise HTTPException(400, "invalid_upi_id")
+        payout_target = body.upi_id.strip()
+    elif method == "bank":
+        if not (body.account_number and body.ifsc and body.holder_name):
+            raise HTTPException(400, "bank_details_required")
+        payout_target = f"{body.holder_name} · A/C {body.account_number} · IFSC {body.ifsc.upper()}"
+    else:
+        raise HTTPException(400, "invalid_method")
     # Lock winnings
     await wallet_ledger(user["id"], "withdraw_lock", -body.amount, bucket="winnings_balance",
-                        note=f"Withdraw request to {body.upi_id}")
+                        note=f"Withdraw request via {method.upper()}")
     doc = {
         "id": gen_id("wd_"),
         "user_id": user["id"],
         "username": user["username"],
         "amount": float(body.amount),
-        "upi_id": body.upi_id.strip(),
+        "method": method,
+        "upi_id": body.upi_id,
         "holder_name": body.holder_name,
+        "account_number": body.account_number,
+        "ifsc": body.ifsc.upper() if body.ifsc else None,
+        "bank_name": body.bank_name,
+        "payout_target": payout_target,
         "status": "pending",
         "created_at": now_iso(),
     }
     await db.withdrawals.insert_one(dict(doc))
-    await notify(user["id"], "Withdrawal submitted", f"₹{body.amount} withdrawal is being processed.", "withdrawal", doc["id"])
+    await notify(user["id"], "Withdrawal submitted", f"₹{body.amount} withdrawal is being processed via {method.upper()}.", "withdrawal", doc["id"])
     return clean_doc(doc)
 
 
