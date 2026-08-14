@@ -1,0 +1,167 @@
+{
+  "theme_strategy": "Light Theme Priority (Vibrant Play Archetype). The design emphasizes trust (real money gaming) combined with accessibility and excitement.",
+  "typography": {
+    "headings": {
+      "font_family": "Outfit, sans-serif",
+      "weights": ["600", "700", "800"],
+      "usage": "Bold, punchy headings for game titles, user greetings, and balances. Use tracking-tight for larger headings."
+    },
+    "body": {
+      "font_family": "DM Sans, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "Clean, highly legible text for rules, transactions, and supporting info."
+    },
+    "scale": {
+      "h1": "text-3xl sm:text-4xl font-bold tracking-tight",
+      "h2": "text-xl sm:text-2xl font-semibold",
+      "h3": "text-lg sm:text-xl font-semibold",
+      "body": "text-base",
+      "small": "text-sm font-medium",
+      "tiny_labels": "text-xs font-bold uppercase tracking-wider"
+    }
+  },
+  "colors": {
+    "background": {
+      "base": "#F8FAFC",
+      "card": "#FFFFFF",
+      "elevated": "#FFFFFF"
+    },
+    "primary": {
+      "DEFAULT": "#2563EB",
+      "hover": "#1D4ED8",
+      "light": "#EFF6FF",
+      "foreground": "#FFFFFF",
+      "usage": "Primary CTA buttons, main brand elements, 'Play' buttons, 'Open' badges."
+    },
+    "secondary": {
+      "green": {
+        "DEFAULT": "#16A34A",
+        "light": "#F0FDF4",
+        "usage": "Wallet balances, 'Add Cash', 'Winnings', 'LIVE' status badges."
+      },
+      "orange": {
+        "DEFAULT": "#EA580C",
+        "light": "#FFF7ED",
+        "usage": "Refer & Earn banners, Profile icons, 'Pending' badges."
+      },
+      "purple": {
+        "DEFAULT": "#9333EA",
+        "light": "#FAF5FF",
+        "usage": "Notifications, History icons."
+      },
+      "cyan": {
+        "DEFAULT": "#0891B2",
+        "light": "#ECFEFF",
+        "usage": "Support / WhatsApp CTAs."
+      }
+    },
+    "text": {
+      "primary": "#0F172A",
+      "secondary": "#475569",
+      "muted": "#94A3B8"
+    },
+    "borders": {
+      "subtle": "#E2E8F0",
+      "focus": "#93C5FD"
+    },
+    "gradients": {
+      "blue_purple": "bg-gradient-to-r from-blue-500 to-purple-600",
+      "soft_blue": "bg-gradient-to-br from-blue-50 to-indigo-50"
+    }
+  },
+  "visual_enhancers": {
+    "shadows": {
+      "sm": "shadow-sm",
+      "md": "shadow-[0_4px_20px_rgba(0,0,0,0.05)]",
+      "lg": "shadow-[0_8px_30px_rgba(0,0,0,0.08)]",
+      "glow_primary": "drop-shadow-[0_0_8px_rgba(37,99,235,0.4)]"
+    },
+    "border_radius": {
+      "cards": "rounded-2xl",
+      "buttons": "rounded-xl",
+      "pills": "rounded-full",
+      "inputs": "rounded-xl"
+    },
+    "surfaces": {
+      "glass": "bg-white/80 backdrop-blur-xl border border-white/40 shadow-sm",
+      "solid": "bg-white border border-slate-200"
+    }
+  },
+  "layouts": {
+    "global": {
+      "container": "max-w-md mx-auto min-h-screen bg-slate-50 relative pb-20 shadow-2xl overflow-x-hidden",
+      "desktop_wrapper": "min-h-screen bg-slate-200 flex justify-center items-start"
+    },
+    "spacing": {
+      "section_gap": "gap-6",
+      "card_padding": "p-4 sm:p-6",
+      "page_padding": "px-4 py-6"
+    }
+  },
+  "components": {
+    "bottom_nav": {
+      "style": "fixed bottom-0 w-full max-w-md bg-white border-t border-slate-200 flex justify-around items-center h-16 px-2 pb-safe z-50",
+      "item_active": "text-blue-600 font-semibold",
+      "item_inactive": "text-slate-500"
+    },
+    "header": {
+      "style": "sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex justify-between items-center"
+    },
+    "cards": {
+      "game_card": "relative overflow-hidden rounded-3xl bg-white shadow-md border border-slate-100",
+      "wallet_card": "rounded-2xl p-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg"
+    },
+    "badges": {
+      "live": "bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide border border-green-200",
+      "pending": "bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide border border-orange-200",
+      "open": "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide border border-blue-200"
+    },
+    "buttons": {
+      "primary": "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-transform active:scale-95 shadow-md shadow-blue-200",
+      "whatsapp": "w-full bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md"
+    }
+  },
+  "image_urls": {
+    "ludo_board": {
+      "url": "https://images.unsplash.com/photo-1596687909057-dfac2b25b891?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwzfHxsdWRvJTIwYm9hcmQlMjBnYW1lfGVufDB8fHx8MTc4NjczMTQ3N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Red, green, and yellow Ludo board game for the Ludo Classic card"
+    },
+    "avatar_1": {
+      "url": "https://images.unsplash.com/photo-1740252117070-7aa2955b25f8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwyfHxhdmF0YXIlMjB1c2VyJTIwcHJvZmlsZXxlbnwwfHx8fDE3ODY3MzE0Nzd8MA&ixlib=rb-4.1.0&q=85",
+      "description": "3D avatar character for Player 1 / User Profile"
+    },
+    "avatar_2": {
+      "url": "https://images.unsplash.com/photo-1740252117044-2af197eea287?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxhdmF0YXIlMjB1c2VyJTIwcHJvZmlsZXxlbnwwfHx8fDE3ODY3MzE0Nzd8MA&ixlib=rb-4.1.0&q=85",
+      "description": "3D avatar character with blue hat for Player 2"
+    }
+  },
+  "instructions_to_main_agent": [
+    "This is a Mobile-First Web Application. Wrap all main routes in a max-width container (`max-w-md mx-auto`) so it looks like a mobile app even on desktop screens.",
+    "Do NOT use complete transparent backgrounds for sticky headers or dropdowns over content. Use solid colors or heavy backdrop-blur (glassmorphism) with high opacity.",
+    "Use `lucide-react` for all icons (Home, Wallet, Profile, Menu, Info, Bell, etc.).",
+    "All interactive elements (buttons, inputs, tabs) MUST have a `data-testid` attribute in kebab-case format (e.g., `data-testid=\"play-ludo-button\"`).",
+    "Include subtle animations: hover states (`hover:-translate-y-0.5`), active/click states (`active:scale-95`), and smooth page transitions.",
+    "Implement Shadcn UI components but heavily customize them to remove the default 'Vercel' look. Make them rounded, friendly, and vibrant.",
+    "For the Ludo board game card on the Home page, use the provided `ludo_board` image URL, overlay a dark gradient (`bg-gradient-to-t from-black/80 to-transparent`) at the bottom, and place the 'Play' button over it.",
+    "The Bottom Navigation should be fixed at the bottom (`fixed bottom-0 w-full max-w-md`), pushing content up via padding-bottom on the main layout.",
+    "Use the exact colors specified (Blue primary, Green wallet, Orange refer/profile, Purple notifications).",
+    "Do not use generic font families like Inter for headings. Use Outfit or Manrope (Google Fonts). Import them in the index.html or global css."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Never apply universal transition (e.g., `transition: all`). Apply transitions to specific properties like `transition-colors`, `transition-transform`.",
+    "Never use AI emoji characters for icons. Always use proper SVG icons (lucide-react).",
+    "Do not text-align center the entire app. Keep text left-aligned by default for readability.",
+    "Ensure all contrast ratios pass WCAG AA standards. If text is over an image, add a gradient overlay or text-shadow.",
+    "For toasts, use the `sonner` library.",
+    "Use large clickable areas (min 44x44px) for mobile usability."
+  ],
+  "accessibility": {
+    "contrast": "Ensure text on the primary blue and green buttons is pure white. Use darker shades of text for light backgrounds.",
+    "touch_targets": "Minimum 48x48px for all icon buttons, bottom nav items, and interactive pills."
+  },
+  "motion": {
+    "page_transition": "animate-in fade-in slide-in-from-bottom-4 duration-300",
+    "button_tap": "active:scale-95 transition-transform duration-150 ease-in-out",
+    "drawer_slide": "animate-in slide-in-from-left duration-300"
+  }
+}

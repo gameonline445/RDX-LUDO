@@ -1,0 +1,98 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  background: #E2E8F0;
+}
+body {
+  margin: 0;
+  font-family: "DM Sans", system-ui, sans-serif;
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, .heading {
+  font-family: "Outfit", sans-serif;
+}
+
+/* App shell — mobile canvas centered on desktop */
+.app-shell {
+  max-width: 28rem;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #F8FAFC;
+  position: relative;
+  padding-bottom: 5rem;
+  box-shadow: 0 10px 40px rgba(15,23,42,0.10);
+  overflow-x: hidden;
+}
+
+.gradient-header-bg {
+  background: linear-gradient(180deg, #EEF2FF 0%, #F8FAFC 100%);
+}
+
+.pill { border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; }
+.pill-blue  { background: #DBEAFE; color: #1D4ED8; }
+.pill-green { background: #DCFCE7; color: #15803D; }
+.pill-orange{ background: #FFEDD5; color: #C2410C; }
+.pill-purple{ background: #F3E8FF; color: #7E22CE; }
+
+.card {
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px rgba(15,23,42,0.05);
+}
+
+.btn-primary {
+  background: #2563EB;
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  transition: transform 150ms ease, background-color 150ms ease;
+  box-shadow: 0 6px 20px rgba(37,99,235,0.25);
+}
+.btn-primary:hover { background: #1D4ED8; }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+.icon-tile {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+}
