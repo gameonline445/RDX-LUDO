@@ -369,7 +369,7 @@ async def create_deposit(body: DepositBody, user: dict = Depends(get_current_use
 
 @api.get("/deposits/mine")
 async def my_deposits(user: dict = Depends(get_current_user)):
-    cur = db.deposits.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1)
+    cur = db.deposits.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).limit(200)
     return await cur.to_list(200)
 
 
@@ -442,7 +442,7 @@ async def create_withdraw(body: WithdrawBody, user: dict = Depends(get_current_u
 
 @api.get("/withdrawals/mine")
 async def my_withdrawals(user: dict = Depends(get_current_user)):
-    cur = db.withdrawals.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1)
+    cur = db.withdrawals.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).limit(200)
     return await cur.to_list(200)
 
 
@@ -830,10 +830,11 @@ async def mark_read(user: dict = Depends(get_current_user)):
 async def referral_info(user: dict = Depends(get_current_user)):
     s = await get_settings()
     total_refs = await db.users.count_documents({"referred_by": user["id"]})
-    total = 0.0
-    cur = db.wallet_transactions.find({"user_id": user["id"], "type": "referral_reward"})
-    async for tx in cur:
-        total += tx.get("amount", 0.0)
+    ref_agg = await db.wallet_transactions.aggregate([
+        {"$match": {"user_id": user["id"], "type": "referral_reward"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
+    ]).to_list(1)
+    total = ref_agg[0]["total"] if ref_agg else 0.0
     # referrer info
     applied_code = None
     if user.get("referred_by"):
@@ -887,7 +888,7 @@ async def create_ticket(body: SupportTicketBody, user: dict = Depends(get_curren
 
 @api.get("/support/mine")
 async def my_tickets(user: dict = Depends(get_current_user)):
-    cur = db.support_tickets.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1)
+    cur = db.support_tickets.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).limit(100)
     return await cur.to_list(100)
 
 
@@ -947,13 +948,17 @@ async def admin_dashboard(_: dict = Depends(get_admin)):
     pending_withdrawals = await db.withdrawals.count_documents({"status": "pending"})
     pending_kyc = await db.users.count_documents({"kyc_status": "pending"})
     tickets = await db.support_tickets.count_documents({"status": "open"})
-    # sums
-    dep_sum = 0.0
-    async for d in db.deposits.find({"status": "verified"}):
-        dep_sum += d.get("amount", 0)
-    wd_sum = 0.0
-    async for d in db.withdrawals.find({"status": "paid"}):
-        wd_sum += d.get("amount", 0)
+    # sums via aggregation
+    dep_agg = await db.deposits.aggregate([
+        {"$match": {"status": "verified"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
+    ]).to_list(1)
+    dep_sum = dep_agg[0]["total"] if dep_agg else 0.0
+    wd_agg = await db.withdrawals.aggregate([
+        {"$match": {"status": "paid"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
+    ]).to_list(1)
+    wd_sum = wd_agg[0]["total"] if wd_agg else 0.0
     return {
         "total_users": total_users,
         "active_users": active_users,
@@ -1074,7 +1079,7 @@ async def admin_battles(_: dict = Depends(get_admin), status_filter: str = "all"
 
 @api.get("/admin/kyc")
 async def admin_kyc(_: dict = Depends(get_admin)):
-    cur = db.kyc.find({"status": "pending"}, {"_id": 0}).sort("created_at", -1)
+    cur = db.kyc.find({"status": "pending"}, {"_id": 0}).sort("created_at", -1).limit(200)
     return await cur.to_list(200)
 
 
