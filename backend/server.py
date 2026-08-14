@@ -114,12 +114,12 @@ async def get_admin(cred: Optional[HTTPAuthorizationCredentials] = Depends(secur
 # ----------------------------- settings -----------------------------
 
 DEFAULT_SETTINGS = {
-    "app_name": "MY LUDO",
+    "app_name": "RDX LUDO",
     "logo_url": "",
     "support_number": "8306865537",
     "whatsapp_number": "8306865537",
     "upi_id": "Ankitrajputtt@fam",
-    "payee_name": "MY LUDO",
+    "payee_name": "RDX LUDO",
     "min_deposit": 10,
     "max_deposit": 100000,
     "min_withdraw": 100,
@@ -810,17 +810,39 @@ async def mark_read(user: dict = Depends(get_current_user)):
 async def referral_info(user: dict = Depends(get_current_user)):
     s = await get_settings()
     total_refs = await db.users.count_documents({"referred_by": user["id"]})
-    # total earnings
     total = 0.0
     cur = db.wallet_transactions.find({"user_id": user["id"], "type": "referral_reward"})
     async for tx in cur:
         total += tx.get("amount", 0.0)
+    # referrer info
+    applied_code = None
+    if user.get("referred_by"):
+        ref = await db.users.find_one({"id": user["referred_by"]})
+        if ref:
+            applied_code = ref.get("referral_code")
+    w = await ensure_wallet(user["id"])
     return {
         "code": user["referral_code"],
         "percent": s["referral_percent"],
         "total_referrals": total_refs,
         "total_earnings": round(total, 2),
+        "applied_code": applied_code,
+        "bonus_balance": w.get("bonus_balance", 0),
     }
+
+
+@api.post("/referral/redeem")
+async def referral_redeem(user: dict = Depends(get_current_user)):
+    w = await ensure_wallet(user["id"])
+    amount = round(w.get("bonus_balance", 0), 2)
+    if amount <= 0:
+        raise HTTPException(400, "no_referral_earnings")
+    await wallet_ledger(user["id"], "referral_redeem_debit", -amount, bucket="bonus_balance",
+                        note="Redeemed to winnings")
+    await wallet_ledger(user["id"], "referral_redeem_credit", amount, bucket="winnings_balance",
+                        note="Referral earnings redeemed")
+    await notify(user["id"], "Referral redeemed", f"₹{amount} moved to winnings. You can withdraw now.", "referral")
+    return {"ok": True, "amount": amount}
 
 
 class SupportTicketBody(BaseModel):
@@ -1075,6 +1097,11 @@ async def admin_update_settings(body: dict, _: dict = Depends(get_admin)):
 @app.on_event("startup")
 async def startup():
     await get_settings()
+    # migrate old brand name
+    await db.app_settings.update_one(
+        {"id": "global", "app_name": {"$in": ["MY LUDO", ""]}},
+        {"$set": {"app_name": "RDX LUDO", "payee_name": "RDX LUDO"}},
+    )
     # seed admin
     if not await db.admin_users.find_one({"username": "admin"}):
         await db.admin_users.insert_one({

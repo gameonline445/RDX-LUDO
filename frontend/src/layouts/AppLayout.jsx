@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, Bell, Wallet as WalletIcon, Gift, Home, LifeBuoy, User, X, LogOut, Percent, Clock, Download, Dice5 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { LOGO_URL, BRAND_FALLBACK } from "@/lib/brand";
 
 const NavItem = ({ to, active, icon: Icon, color, label, testId }) => (
   <Link to={to} data-testid={testId} className="flex flex-col items-center flex-1 py-1">
@@ -51,10 +52,10 @@ export default function AppLayout({ children, active }) {
           >
             <Menu size={20} />
           </button>
-          <div className="w-10 h-10 rounded-full bg-white shadow-inner border border-slate-200 flex items-center justify-center">
-            <Dice5 size={20} className="text-blue-600" />
+          <div className="w-10 h-10 rounded-full bg-white shadow-inner border border-slate-200 flex items-center justify-center overflow-hidden">
+            <img src={LOGO_URL} alt="RDX LUDO" className="w-9 h-9 object-contain" />
           </div>
-          <span className="font-bold text-slate-900 tracking-tight">{settings.app_name || "MY LUDO"}</span>
+          <span className="font-bold text-slate-900 tracking-tight">{settings.app_name || BRAND_FALLBACK}</span>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/notifications" data-testid="notifications-btn" className="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center shadow-md active:scale-95">
@@ -90,11 +91,11 @@ export default function AppLayout({ children, active }) {
             <div className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl pointer-events-auto flex flex-col animate-in slide-in-from-left duration-200">
               <div className="p-4 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
-                    <Dice5 size={22} className="text-blue-600" />
+                  <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center border border-slate-200 overflow-hidden">
+                    <img src={LOGO_URL} alt="RDX LUDO" className="w-10 h-10 object-contain" />
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900">{settings.app_name || "MY LUDO"}</div>
+                    <div className="font-bold text-slate-900">{settings.app_name || BRAND_FALLBACK}</div>
                     <div className="text-xs text-slate-500">Play · Win · Earn</div>
                   </div>
                 </div>

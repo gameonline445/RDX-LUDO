@@ -35,6 +35,11 @@ export default function Wallet() {
         </div>
       </div>
 
+      <div className="card p-3 mt-3 flex items-start gap-2 bg-blue-50 border-blue-100">
+        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs mt-0.5">i</div>
+        <div className="text-xs text-slate-700">Deposit balance is for playing only. Winnings can be withdrawn to bank or UPI.</div>
+      </div>
+
       <div className="mt-6 text-xs font-bold tracking-widest text-slate-500">TRANSACTION HISTORY</div>
       <div className="space-y-2 mt-2">
         {txs.length === 0 && <div className="card p-4 text-sm text-slate-500 text-center">No transactions yet.</div>}

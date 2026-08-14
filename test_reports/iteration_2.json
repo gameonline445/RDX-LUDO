@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration 2: RDX LUDO rebrand + Landing/Referral/Support/Profile/Wallet UI changes tested. Backend: 21 passed / 1 skipped (added new TestReferralAppliedAndRedeem class covering /api/referral applied_code+bonus_balance and /api/referral/redeem happy path and empty-bonus 400). Frontend at 420x900: 13 checks passed, 2 minor gaps (page <title> and Hindi promo copy card). Referral gate deep-linking (/public/refer/:code and /refer/:code) stores localStorage.pending_referral and prefills login referral input; after signup /api/referral returns applied_code = referrer's code end-to-end. Header/drawer/login use RDX LUDO logo <img>. Profile Referral Applied card + Referral Redeem action wired. Wallet info banner present. Support page fully redesigned with SUPPORT CENTER pill, ONLINE pill, feature pills, CONTACT OPTIONS heading, WhatsApp INSTANT badge, and 1–2 min footer copy. /home while unauth redirects to / (landing).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "public/index.html", "issue": "Browser page <title> is still 'Emergent | Fullstack App' — spec requires title to be 'RDX LUDO'.", "selector": "head > title", "priority": "MEDIUM"},
+      {"component": "Landing.jsx", "issue": "Hindi promo copy card at bottom is missing — spec required 'ऑटो डिपाजिट', 'ऑटो विथड्रावल', '100% भरोसेमंद प्लेटफार्म' snippet.", "selector": "/", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Update /app/frontend/public/index.html <title> to 'RDX LUDO'.",
+    "Add Hindi promo copy card at bottom of Landing.jsx mentioning ऑटो डिपाजिट / ऑटो विथड्रावल / 100% भरोसेमंद प्लेटफार्म."
+  ],
+  "critical_code_review_comments": [
+    "server.py migration runs on startup and updates app_name from 'MY LUDO'/'' to 'RDX LUDO' — verified. Consider also migrating payee_name if any lingering.",
+    "Login redirects to '/' after auth; Landing has useEffect to nav('/home') when user set — works but a tiny flash of Landing is possible. Could push to '/home' directly on verify.",
+    "Referral redeem writes 2 wallet_ledger rows without a single transaction — acceptable for demo (already flagged in iteration_1).",
+    "Header bottom NavItem 'Home' points to '/' which for logged-in user re-renders Landing then redirects to /home; consider linking to /home directly to avoid the double render.",
+    "Public routes /public/refer/:code and /refer/:code both point to same ReferralGate — DRY OK."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (21/21, 1 intentionally skipped)", "frontend": "87% (13/15)"},
+  "test_credentials": "Admin admin/admin@1234; user any 10-digit mobile + OTP 123456. Two ephemeral users created during test.",
+  "seed_data_creation": "2 fresh users via OTP signup (one referrer, one referred). Ledger entries generated during referral test. No cleanup required (demo mode).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest still lives at /app/backend/tests/backend_test.py. New class TestReferralAppliedAndRedeem covers applied_code, bonus_balance in /api/referral and /api/referral/redeem success + no_referral_earnings 400. Public settings assertion updated to expect app_name='RDX LUDO'. Frontend requirements traceability: only 2 outstanding items are page <title> and Hindi promo copy on Landing — both cosmetic; all functional flows work.",
+  "rca of the issue": "Missing Hindi copy: Landing.jsx never included the Hindi promo card block referenced in the spec. Missing title: index.html was not updated during rebrand; still ships the Emergent boilerplate title."
+}

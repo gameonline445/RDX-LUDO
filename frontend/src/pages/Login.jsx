@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { Dice5, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { LOGO_URL, BRAND_FALLBACK } from "@/lib/brand";
 
 export default function Login() {
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
-  const [refCode, setRefCode] = useState("");
+  const [refCode, setRefCode] = useState(() => localStorage.getItem("pending_referral") || "");
   const [stage, setStage] = useState("mobile");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -30,6 +31,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post("/auth/verify-otp", { mobile, otp, referral_code: refCode || undefined });
+      localStorage.removeItem("pending_referral");
       await login(data.token, data.user);
       toast.success(`Welcome, ${data.user.username}!`);
       nav("/", { replace: true });
@@ -40,10 +42,10 @@ export default function Login() {
     <div className="app-shell flex flex-col">
       <div className="px-6 pt-16 pb-8 bg-gradient-to-b from-indigo-100 via-blue-50 to-transparent">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-20 h-20 rounded-3xl bg-white shadow-lg flex items-center justify-center border border-blue-100">
-            <Dice5 size={40} className="text-blue-600" />
+          <div className="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center border border-slate-200 overflow-hidden">
+            <img src={LOGO_URL} alt="RDX LUDO" className="w-20 h-20 object-contain" />
           </div>
-          <h1 className="heading text-3xl font-extrabold tracking-tight text-slate-900">MY LUDO</h1>
+          <h1 className="heading text-3xl font-extrabold tracking-tight text-slate-900">{BRAND_FALLBACK}</h1>
           <p className="text-slate-500 text-sm">Play · Win · Earn</p>
         </div>
       </div>

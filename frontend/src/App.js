@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
 import Battles from "@/pages/Battles";
@@ -20,19 +21,23 @@ import Notifications from "@/pages/Notifications";
 import KYC from "@/pages/KYC";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import AdminPanel from "@/pages/admin/AdminPanel";
+import ReferralGate from "@/pages/ReferralGate";
 
 const Protected = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="app-shell flex items-center justify-center text-slate-500">Loading…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
   return children;
 };
 
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/public/refer/:code" element={<ReferralGate />} />
+      <Route path="/refer/:code" element={<ReferralGate />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Protected><Home /></Protected>} />
+      <Route path="/home" element={<Protected><Home /></Protected>} />
       <Route path="/battles" element={<Protected><Battles /></Protected>} />
       <Route path="/create-room" element={<Protected><CreateRoom /></Protected>} />
       <Route path="/join-room" element={<Protected><JoinRoom /></Protected>} />

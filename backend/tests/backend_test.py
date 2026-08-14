@@ -89,7 +89,7 @@ class TestSettings:
         r = requests.get(f"{API}/settings/public")
         assert r.status_code == 200
         s = r.json()
-        assert s["app_name"] == "MY LUDO"
+        assert s["app_name"] == "RDX LUDO"
         assert s["upi_id"] == "Ankitrajputtt@fam"
         assert s["whatsapp_number"] == "8306865537"
         assert s["referral_percent"] == 2
@@ -342,3 +342,67 @@ class TestNotificationsAndReferral:
         info2 = requests.get(f"{API}/referral", headers=ref["h"]).json()
         assert info2["total_referrals"] >= 1
         assert info2["total_earnings"] >= 2
+
+
+# ---------- new: applied_code + referral redeem ----------
+
+class TestReferralAppliedAndRedeem:
+    def test_applied_code_and_redeem_flow(self):
+        # ref user
+        ref = login_user()
+        code = ref["user"]["referral_code"]
+
+        # new user signs up using ref's code
+        u2 = login_user(referral_code=code)
+
+        # u2's /api/referral should show applied_code == ref's code
+        r = requests.get(f"{API}/referral", headers=u2["h"])
+        assert r.status_code == 200, r.text
+        info_u2 = r.json()
+        assert info_u2["applied_code"] == code
+        assert "bonus_balance" in info_u2
+
+        # ref user with no upstream referrer -> applied_code null
+        r2 = requests.get(f"{API}/referral", headers=ref["h"])
+        assert r2.status_code == 200
+        info_ref = r2.json()
+        assert info_ref["applied_code"] is None
+        assert "bonus_balance" in info_ref
+
+        # Redeem with 0 bonus should 400
+        rz = requests.post(f"{API}/referral/redeem", headers=ref["h"])
+        assert rz.status_code == 400
+        assert "no_referral_earnings" in rz.text
+
+        # Generate bonus for ref via u2 losing a battle
+        opp = login_user()
+        b = requests.post(f"{API}/rooms/create", json={"entry_amount": 100}, headers=u2["h"]).json()
+        requests.post(f"{API}/rooms/join", json={"room_code": b["room_code"]}, headers=opp["h"])
+        requests.post(f"{API}/game/leave", json={"battle_id": b["id"]}, headers=u2["h"])
+
+        me_before = requests.get(f"{API}/auth/me", headers=ref["h"]).json()
+        bonus_before = me_before["wallet"]["bonus_balance"]
+        winnings_before = me_before["wallet"]["winnings_balance"]
+        assert bonus_before >= 2
+
+        # Redeem
+        rr = requests.post(f"{API}/referral/redeem", headers=ref["h"])
+        assert rr.status_code == 200, rr.text
+        body = rr.json()
+        assert body["ok"] is True
+        assert body["amount"] == round(bonus_before, 2)
+
+        # Verify balances shifted
+        me_after = requests.get(f"{API}/auth/me", headers=ref["h"]).json()
+        assert me_after["wallet"]["bonus_balance"] == 0
+        assert round(me_after["wallet"]["winnings_balance"], 2) == round(winnings_before + bonus_before, 2)
+
+        # Ledger has both entries
+        txs = requests.get(f"{API}/wallet/transactions", headers=ref["h"]).json()
+        types = [t["type"] for t in txs]
+        assert "referral_redeem_debit" in types
+        assert "referral_redeem_credit" in types
+
+        # Second redeem should 400
+        rr2 = requests.post(f"{API}/referral/redeem", headers=ref["h"])
+        assert rr2.status_code == 400
