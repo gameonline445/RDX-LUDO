@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 const DICE_ICONS = [null, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
+
 const PLAYER_COLORS = ["#DC2626", "#2563EB"];
 const PLAYER_LIGHT = ["#FEE2E2", "#DBEAFE"];
 
@@ -24,6 +25,7 @@ export default function LudoGame() {
   const [rolling, setRolling] = useState(false);
   const [moving, setMoving] = useState(false);
   const wsRef = useRef(null);
+
   const nav = useNavigate();
   const { user, refresh } = useAuth();
 
@@ -36,6 +38,8 @@ export default function LudoGame() {
     }
   };
 
+  // Load battle + WebSocket
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     load();
 
@@ -45,7 +49,10 @@ export default function LudoGame() {
     ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data);
-        if (msg.battle) setBattle(msg.battle);
+
+        if (msg.battle) {
+          setBattle(msg.battle);
+        }
       } catch {}
     };
 
@@ -61,20 +68,19 @@ export default function LudoGame() {
 
     return () => {
       clearInterval(hb);
+
       try {
         ws.close();
       } catch {}
     };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battleId]);
 
+  // Refresh wallet after game completion
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (battle?.status === "completed") {
       refresh();
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battle?.status]);
 
   if (!battle) {
@@ -86,12 +92,33 @@ export default function LudoGame() {
   }
 
   const state = battle.game_state;
-  const myIdx = state?.players?.indexOf(user.id);
-  const iAmTurn = state?.turn === myIdx && !state?.winner;
-  const dice = state?.dice;
-  const DiceIcon = dice ? DICE_ICONS[dice] : Dice5;
+
+  if (!state || !state.players) {
+    return (
+      <div className="app-shell p-6 text-slate-500">
+        Loading game state…
+      </div>
+    );
+  }
+
+  const myIdx = state.players.indexOf(user.id);
+
+  const iAmTurn =
+    state.turn === myIdx &&
+    state.winner === null;
+
+  const dice = state.dice;
+
+  const DiceIcon =
+    dice && DICE_ICONS[dice]
+      ? DICE_ICONS[dice]
+      : Dice5;
 
   const rollDice = async () => {
+    if (!iAmTurn || dice != null || rolling) {
+      return;
+    }
+
     setRolling(true);
 
     try {
@@ -106,9 +133,13 @@ export default function LudoGame() {
   };
 
   const moveToken = async (tokenIdx) => {
-    if (!iAmTurn || dice == null) return;
+    if (!iAmTurn || dice == null) {
+      return;
+    }
 
-    if (!state.tokens[String(myIdx)]) return;
+    if (!state.tokens[String(myIdx)]) {
+      return;
+    }
 
     setMoving(true);
 
@@ -126,7 +157,9 @@ export default function LudoGame() {
   };
 
   const leave = async () => {
-    if (!window.confirm("Leave? Opponent will win.")) return;
+    if (!window.confirm("Leave? Opponent will win.")) {
+      return;
+    }
 
     try {
       await api.post("/game/leave", {
@@ -140,19 +173,28 @@ export default function LudoGame() {
   };
 
   const validMoves = (() => {
-    if (!iAmTurn || dice == null) return [];
+    if (!iAmTurn || dice == null) {
+      return [];
+    }
 
     const tokens = state.tokens[String(myIdx)];
 
-    if (!tokens) return [];
+    if (!tokens) {
+      return [];
+    }
 
     const valid = [];
 
     tokens.forEach((pos, i) => {
-      if (pos === 58) return;
+      if (pos === 58) {
+        return;
+      }
 
       if (pos === -1) {
-        if (dice === 6) valid.push(i);
+        if (dice === 6) {
+          valid.push(i);
+        }
+
         return;
       }
 
@@ -165,16 +207,25 @@ export default function LudoGame() {
   })();
 
   const renderPlayerTokens = (pIdx) => {
-    const tokens = state.tokens[String(pIdx)];
-    const color = PLAYER_COLORS[pIdx];
-    const light = PLAYER_LIGHT[pIdx];
+    const tokens = state.tokens[String(pIdx)] || [];
+
+    const color =
+      PLAYER_COLORS[pIdx] || PLAYER_COLORS[0];
+
+    const light =
+      PLAYER_LIGHT[pIdx] || PLAYER_LIGHT[0];
+
     const isMe = pIdx === myIdx;
+
+    const playerDetails =
+      battle.player_details?.[pIdx];
 
     return (
       <div
         className="card p-3 space-y-2"
         style={{ borderColor: color }}
         data-testid={`player-panel-${pIdx}`}
+        key={pIdx}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -188,12 +239,14 @@ export default function LudoGame() {
 
             <div>
               <div className="font-bold text-sm">
-                {battle.player_details[pIdx].username}{" "}
-                {isMe && "(You)"}
+                {playerDetails?.username || "Player"}
+
+                {isMe && " (You)"}
               </div>
 
               <div className="text-[10px] text-slate-500">
-                {state.turn === pIdx && !state.winner
+                {state.turn === pIdx &&
+                state.winner === null
                   ? "🎯 Turn"
                   : ""}
               </div>
@@ -208,16 +261,20 @@ export default function LudoGame() {
         <div className="grid grid-cols-4 gap-2">
           {tokens.map((pos, i) => {
             const canMove =
-              isMe && validMoves.includes(i);
+              isMe &&
+              validMoves.includes(i);
 
-            const label =
-              pos === -1
-                ? "🏠"
-                : pos === 58
-                ? "★"
-                : pos >= 52
-                ? `H${pos - 51}`
-                : pos + 1;
+            let label;
+
+            if (pos === -1) {
+              label = "🏠";
+            } else if (pos === 58) {
+              label = "★";
+            } else if (pos >= 52) {
+              label = `H${pos - 51}`;
+            } else {
+              label = pos + 1;
+            }
 
             return (
               <button
@@ -234,7 +291,9 @@ export default function LudoGame() {
                 }`}
                 style={{
                   background:
-                    pos === 58 ? "#FEF3C7" : light,
+                    pos === 58
+                      ? "#FEF3C7"
+                      : light,
                   borderColor: canMove
                     ? "#16A34A"
                     : color,
@@ -346,11 +405,15 @@ export default function LudoGame() {
             />
 
             <div className="heading text-2xl font-extrabold text-slate-900 mt-2">
-              {battle.player_details[state.winner].username} wins!
+              {battle.player_details?.[
+                state.winner
+              ]?.username || "Player"}{" "}
+              wins!
             </div>
 
             <div className="text-sm text-slate-600 mt-1">
-              Prize ₹{battle.prize_amount} credited to winnings.
+              Prize ₹{battle.prize_amount} credited
+              to winnings.
             </div>
 
             <button
@@ -363,16 +426,19 @@ export default function LudoGame() {
         )}
       </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%,100% {
-            box-shadow: 0 0 0 0 rgba(22,163,74,0.5)
+      <style>
+        {`
+          @keyframes pulse {
+            0%,100% {
+              box-shadow: 0 0 0 0 rgba(22,163,74,0.5)
+            }
+
+            50% {
+              box-shadow: 0 0 0 8px rgba(22,163,74,0)
+            }
           }
-          50% {
-            box-shadow: 0 0 0 8px rgba(22,163,74,0)
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 }
