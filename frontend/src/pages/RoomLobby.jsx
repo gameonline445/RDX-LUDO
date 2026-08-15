@@ -7,18 +7,27 @@ import { toast } from "sonner";
 
 export default function RoomLobby() {
   const { battleId } = useParams();
+
   const [battle, setBattle] = useState(null);
   const [countdown, setCountdown] = useState(null);
+
   const nav = useNavigate();
 
   const load = async () => {
     try {
-      const { data } = await api.get(`/rooms/${battleId}`);
+      const { data } = await api.get(
+        `/rooms/${battleId}`
+      );
 
       setBattle(data);
 
-      if (data.status === "matched" || data.status === "live") {
-        setCountdown((c) => (c === null ? 3 : c));
+      if (
+        data.status === "matched" ||
+        data.status === "live"
+      ) {
+        setCountdown((c) =>
+          c === null ? 3 : c
+        );
       } else if (data.status === "completed") {
         nav(`/game/${battleId}`);
       }
@@ -27,6 +36,8 @@ export default function RoomLobby() {
     }
   };
 
+  // Poll room status
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     load();
 
@@ -35,8 +46,12 @@ export default function RoomLobby() {
     return () => clearInterval(t);
   }, [battleId]);
 
+  // Countdown
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (countdown === null) return;
+    if (countdown === null) {
+      return;
+    }
 
     if (countdown <= 0) {
       nav(`/game/${battleId}`);
@@ -49,7 +64,7 @@ export default function RoomLobby() {
     );
 
     return () => clearTimeout(t);
-  }, [countdown, battleId]);
+  }, [countdown]);
 
   const cancel = async () => {
     try {
@@ -57,7 +72,10 @@ export default function RoomLobby() {
         battle_id: battleId,
       });
 
-      toast.success("Room cancelled and refunded");
+      toast.success(
+        "Room cancelled and refunded"
+      );
+
       nav("/battles");
     } catch (e) {
       toast.error(e.message);
@@ -101,6 +119,7 @@ export default function RoomLobby() {
             navigator.clipboard?.writeText(
               battle.room_code
             );
+
             toast.success("Code copied");
           }}
           className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center"
@@ -112,10 +131,12 @@ export default function RoomLobby() {
           data-testid="share-code-btn"
           onClick={async () => {
             try {
-              await navigator.share?.({
-                title: "MY LUDO Battle",
-                text: `Join my Ludo battle. Room code: ${battle.room_code}`,
-              });
+              if (navigator.share) {
+                await navigator.share({
+                  title: "MY LUDO Battle",
+                  text: `Join my Ludo battle. Room code: ${battle.room_code}`,
+                });
+              }
             } catch {}
           }}
           className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center"
@@ -132,7 +153,7 @@ export default function RoomLobby() {
             </div>
 
             <div className="text-sm font-bold text-slate-900">
-              {p1?.username}
+              {p1?.username || "Player 1"}
             </div>
 
             <span className="pill pill-blue">
@@ -150,7 +171,7 @@ export default function RoomLobby() {
             {p2 ? (
               <>
                 <div className="w-16 h-16 rounded-full bg-emerald-100 border-4 border-emerald-500 flex items-center justify-center text-emerald-700 font-extrabold">
-                  {p2.username?.[0]}
+                  {p2.username?.[0] || "?"}
                 </div>
 
                 <div className="text-sm font-bold text-slate-900">
