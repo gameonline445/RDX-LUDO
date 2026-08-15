@@ -45,9 +45,7 @@ export default function LudoGame() {
     ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data);
-        if (msg.battle) {
-          setBattle(msg.battle);
-        }
+        if (msg.battle) setBattle(msg.battle);
       } catch {}
     };
 
@@ -67,13 +65,17 @@ export default function LudoGame() {
         ws.close();
       } catch {}
     };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battleId]);
 
   useEffect(() => {
     if (battle?.status === "completed") {
       refresh();
     }
-  }, [battle?.status, refresh]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battle?.status]);
 
   if (!battle) {
     return (
@@ -105,6 +107,7 @@ export default function LudoGame() {
 
   const moveToken = async (tokenIdx) => {
     if (!iAmTurn || dice == null) return;
+
     if (!state.tokens[String(myIdx)]) return;
 
     setMoving(true);
@@ -149,9 +152,7 @@ export default function LudoGame() {
       if (pos === 58) return;
 
       if (pos === -1) {
-        if (dice === 6) {
-          valid.push(i);
-        }
+        if (dice === 6) valid.push(i);
         return;
       }
 
@@ -222,7 +223,9 @@ export default function LudoGame() {
               <button
                 key={i}
                 data-testid={`token-${pIdx}-${i}`}
-                onClick={() => canMove && moveToken(i)}
+                onClick={() =>
+                  canMove && moveToken(i)
+                }
                 disabled={!canMove || moving}
                 className={`aspect-square rounded-xl flex items-center justify-center font-extrabold text-sm border-2 transition-transform ${
                   canMove
@@ -268,7 +271,8 @@ export default function LudoGame() {
           onClick={leave}
           className="px-3 py-2 rounded-xl bg-red-50 text-red-700 border border-red-200 text-sm font-bold flex items-center gap-1"
         >
-          <LogOut size={14} /> Leave
+          <LogOut size={14} />
+          Leave
         </button>
       </div>
 
@@ -364,7 +368,6 @@ export default function LudoGame() {
           0%,100% {
             box-shadow: 0 0 0 0 rgba(22,163,74,0.5)
           }
-
           50% {
             box-shadow: 0 0 0 8px rgba(22,163,74,0)
           }
